@@ -158,8 +158,9 @@ function install() {
 		sudo apt-get install zsh -y
 		sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 		git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
+		git clone https://github.com/agkozak/zsh-z ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-z
 		# Set plugins
-		sed -i 's/plugins=(\(.*\))/plugins=(\1 z fzf-zsh-plugin)/' $HOME/.zshrc
+		sed -i 's/plugins=(\(.*\))/plugins=( \1 zsh-z fzf-zsh-plugin )/' $HOME/.zshrc
 	fi
 
 	if ! command -v conda &> /dev/null; then
