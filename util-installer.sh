@@ -60,7 +60,11 @@ function install_eldr_utils() {
 function install_3d_printing_utils() {
 	echo -e "${BLUE}---INSTALLING 3D-PRINTING PACKAGES---${NORMAL}"
 	sudo apt-get install -y \
-		freecad
+		freecad \
+		openscad
+
+	pip3 install solidpython # Python wrapper for OpenSCAD
+
 	VER_U="$(get_version prusa3d | sed 's/\./\_/g')"
 	URL="https://cdn.prusa3d.com/downloads/drivers/prusa3d_linux_$VER_U.zip"
 	wget_output=$(wget -q "$URL")
