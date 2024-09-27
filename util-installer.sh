@@ -54,7 +54,8 @@ function install_eldr_utils() {
 		libglfw3-dev \
 		libglm-dev \
 		libvulkan-dev \
-		libjpeg62-turbo-dev
+		libjpeg62-turbo-dev \
+		libpng-dev
 }
 
 function install_3d_printing_utils() {
