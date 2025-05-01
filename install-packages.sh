@@ -22,8 +22,16 @@ function get_version() {
 	echo $(grep "$1" "$SCRIPT_DIR/version.info" | sed 's/\(.*\):\(.*\)/\2/')
 }
 
+function check_run_command_as_root() {
+  [[ "${EUID:-${UID}}" == "0" ]] || return
+  echo "Don't run this as root!"
+  exit 1
+}
+
 # Stuff that I usually want
 function install() {
+	check_run_command_as_root
+
 	echo -e "${BLUE}---INSTALLING PACKAGES---${NORMAL}"
 	sudo apt-get install -y \
 		git \
@@ -103,13 +111,15 @@ function install() {
 		# Language servers for neovim
 		brew install lua-language-server
 		brew install yaml-language-server
-		pip3 install python-lsp-server
+		brew install python-lsp-server
 	fi
 
 	# Install oh-my-zsh (assume that oh-my-zsh is installed if zsh is)
 	if ! command -v zsh &> /dev/null; then
-		echo -e "${BLUE}---INSTALLING OH-MY-ZSH---${NORMAL}"
+		echo -e "${BLUE}---INSTALLING ZSH---${NORMAL}"
 		sudo apt-get install zsh -y
+		echo -e "${BLUE}---RUNNING OH-MY-ZSH INSTALL SCRIPT---${NORMAL}"
+		echo -e "${RED}---Remember to 'exit' after oh-my-zsh is installed to finish installation---${NORMAL}"
 		sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 		git clone --depth 1 https://github.com/unixorn/fzf-zsh-plugin.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-zsh-plugin
 		git clone https://github.com/agkozak/zsh-z ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-z
