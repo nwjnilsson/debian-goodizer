@@ -18,73 +18,13 @@ BLINK=$(tput blink)
 REVERSE=$(tput smso)
 UNDERLINE=$(tput smul)
 
-function help() {
-	echo "Options:"
-	echo "	-h: Show this message"
-	echo "	-e: Install packages for development of Eldr"
-	echo "	-o: Install nice-to-haves (spotify etc)"
-	echo "	-p: Install 3D-printing software (freecad, PrusaSlicer etc)"
-	echo "Usage:"
-	echo "	./util-installer.sh -poe"
-}
-
 function get_version() {
-	echo $(grep "$1" "$SCRIPT_DIR/versions.conf" | sed 's/\(.*\):\(.*\)/\2/')
-}
-
-function install_nice_to_haves() {
-	echo -e "${BLUE}---INSTALLING NICE-TO-HAVES---${NORMAL}"
-	curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | \
-		sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
-	echo "deb http://repository.spotify.com stable non-free" | \
-		sudo tee /etc/apt/sources.list.d/spotify.list
-
-	sudo apt-get update && sudo apt-get install -y spotify-client
-	#sudo apt-get install -y \
-
-}
-
-function install_eldr_utils() {
-	echo -e "${BLUE}---INSTALLING ELDR DEV PACKAGES---${NORMAL}"
-	sudo apt-get install -y \
-		ninja-build \
-		meson \
-		pkg-config \
-		libspdlog-dev \
-		libglfw3-dev \
-		libglm-dev \
-		libvulkan-dev \
-		libjpeg62-turbo-dev \
-		libpng-dev
-}
-
-function install_3d_printing_utils() {
-	echo -e "${BLUE}---INSTALLING 3D-PRINTING PACKAGES---${NORMAL}"
-	sudo apt-get install -y \
-		freecad \
-		openscad
-
-	pip3 install solidpython # Python wrapper for OpenSCAD
-
-	VER_U="$(get_version prusa3d | sed 's/\./\_/g')"
-	URL="https://cdn.prusa3d.com/downloads/drivers/prusa3d_linux_$VER_U.zip"
-	wget_output=$(wget -q "$URL")
-	if [ $? -ne 0 ]; then
-		failed+=("PrusaSlicer")
-	else
-		unzip prusa3d_linux_$VER_U.zip
-		rm PrusaSlicer-*Ubuntu*.AppImage # Not interested in this version
-		PRUSA_APP="$(find . -name PrusaSlicer-*.AppImage)"
-		chmod u+x $PRUSA_APP
-		mv $PRUSA_APP $APP_IMAGES
-		sudo ln -s $APP_IMAGES/$PRUSA_APP /usr/bin/prusa3d
-		PRUSA_INSTALLED="true"
-	fi
+	echo $(grep "$1" "$SCRIPT_DIR/version.info" | sed 's/\(.*\):\(.*\)/\2/')
 }
 
 # Stuff that I usually want
 function install() {
-	echo -e "${BLUE}---INSTALLING BASE PACKAGES---${NORMAL}"
+	echo -e "${BLUE}---INSTALLING PACKAGES---${NORMAL}"
 	sudo apt-get install -y \
 		git \
 		cmake \
@@ -94,7 +34,16 @@ function install() {
 		python3 \
 		python3-pip \
 		python3-setuptools \
-		python3-wheel
+		python3-wheel \
+		ninja-build \
+		meson \
+		pkg-config \
+		libspdlog-dev \
+		libglfw3-dev \
+		libglm-dev \
+		libvulkan-dev \
+		libjpeg62-turbo-dev \
+		libpng-dev
 
 
 	# Install neovim and deps if not present
@@ -128,7 +77,7 @@ function install() {
 			chmod u+x $APP_IMAGES/neovim.appimage
 			sudo ln -s $APP_IMAGES/neovim.appimage /usr/bin/nvim
 			# Download neovim config
-			git clone https://github.com/gfx-jonte/neovim/ $HOME/.config/nvim/
+			git clone https://github.com/nwjnilsson/neovim/ $HOME/.config/nvim/
 		fi
 
 
@@ -144,7 +93,7 @@ function install() {
 			sudo mv CodeNewRoman /usr/local/share/fonts/
 		fi
 
-		if ! command -v nvim &> /dev/null; then
+		if ! command -v brew &> /dev/null; then
 			echo -e "${BLUE}---INSTALLING HOMEBREW---${NORMAL}"
 			/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 			(echo; echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"') >> $HOME/.zshrc
@@ -184,28 +133,6 @@ function install() {
 
 }
 
-while getopts ":hope" option; do
-	case $option in
-		h) # display Help
-			help
-			exit;;
-		e)
-			INSTALL_ELDR_TOOLS="true"
-			;;
-		o)
-			INSTALL_NICE_TO_HAVES="true"
-			;;
-		p)
-			INSTALL_3D_PRINTING_TOOLS="true"
-			;;
-		\?) # Invalid option
-			echo "Error: Invalid option"
-			exit;;
-		esac
-done
-# Shift parsed options to access positional arguments (if any)
-shift $((OPTIND-1))
-
 TMP="tmp_files"
 APP_IMAGES="$HOME/AppImages"
 CODE="$HOME/code"
@@ -219,16 +146,6 @@ cd $TMP # put downloads etc in this directory
 failed=() # To keep track of download errors
 
 install
-if [ -n "$INSTALL_ELDR_TOOLS" ]; then
-	install_eldr_utils
-fi
-if [ -n "$INSTALL_3D_PRINTING_TOOLS" ]; then
-	install_3d_printing_utils
-fi
-if [ -n "$INSTALL_NICE_TO_HAVES" ]; then
-	install_nice_to_haves
-fi
-
 
 # Cleanup
 echo "Cleaning up..."
@@ -245,8 +162,4 @@ fi
 
 if [ -n "$CONDA_INSTALLED" ]; then
 	echo "Conda has been installed, remember to run ~/miniconda3/bin/conda init zsh"
-fi
-if [ -n "$PRUSA_INSTALLED" ]; then
-	echo "PrusaSlicer has been installed. Additional dependencies may need to be installed before the app will run correctly."
-	echo "Run 'prusa3d' and check the output."
 fi
