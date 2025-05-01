@@ -77,7 +77,7 @@ function install() {
 		fi
 
 		# Download neovim
-		URL="https://github.com/neovim/neovim/releases/latest/download/nvim.appimage"
+		URL="https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage"
 		wget_output=$(wget -q "$URL" -O $APP_IMAGES/neovim.appimage)
 		if [ $? -ne 0 ]; then
 			failed+=("Neovim")
